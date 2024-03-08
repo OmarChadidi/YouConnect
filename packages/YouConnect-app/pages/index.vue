@@ -19,7 +19,7 @@ const pages = [
 </script>
 
 <template>
-  <div class="max-w-2xl mx-auto my-4">
+  <div>
     <section class="flex justify-between items-center">
       <header>
         <h1 class="text-lg font-bold">YouCan Connect</h1>
@@ -32,7 +32,7 @@ const pages = [
             <template #icon>
               <i class="i-youcan:plus"></i>
             </template>
-            Create
+            Create profile
           </PrimaryButton>
         </NuxtLink>
       </div>

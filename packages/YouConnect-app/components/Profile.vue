@@ -6,14 +6,14 @@ defineProps<{
 </script>
 
 <template>
-  <a :href="url" class="group flex justify-between items-center hover:bg-gray-50 p-3 rounded-lg">
+  <a :href="url" class="group flex justify-between items-center hover:bg-gray-50 p-3 rounded-lg shadow-lg">
     <div class="flex gap-6 items-center">
       <div class="group-hover:bg-gray-200 p-2 rounded-full">
         <i class="i-youcan:storefront"></i>
       </div>
 
       <div>
-        <p class="text-lg font-bold">
+        <p class="text-lg font-semibold">
           {{ title }}
         </p>
         <p>
