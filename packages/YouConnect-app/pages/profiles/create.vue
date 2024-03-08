@@ -12,10 +12,11 @@ import {
 const slug = ref("");
 const name = ref("");
 const description = ref("");
-
 const attachments = ref<File[]>([]);
-const disabled = ref(false);
 const limit = 1;
+const products = ref([]);
+
+const disabled = ref(false);
 
 const urls = [{ label: "https://youcanconnect.com/" }];
 
@@ -29,7 +30,8 @@ const handleCreateProfile = () => {
     slug.value,
     name.value,
     description.value,
-    attachments.value
+    attachments.value,
+    products.value
   );
 
   isLoading.value = false;
@@ -46,9 +48,16 @@ const deleteFile = (file: File) => {
     checkLimit();
   }
 };
+
 watch(attachments, () => {
   checkLimit();
 });
+
+const qantra = useQantra();
+
+const handleAddProducts = async () => {
+  products.value = await qantra.resourcePicker({ type: 'product' });
+}
 </script>
 
 <template>
@@ -105,7 +114,7 @@ watch(attachments, () => {
         </InputGroup>
 
         <InputGroup>
-          <template #label>Upload</template>
+          <template #label>Photo</template>
 
           <template #input>
             <template v-if="attachments.length > 0">
@@ -122,6 +131,22 @@ watch(attachments, () => {
               :limit="limit"
               :disabled="disabled"
             />
+          </template>
+        </InputGroup>
+
+        <InputGroup>
+          <template #label> Products </template>
+
+          <template #input>
+            <PrimaryButton icon-position="left" @click="handleAddProducts">
+              <template #icon>
+                <i class="i-youcan:plus"></i>
+              </template>
+              Browse products
+            </PrimaryButton>
+          </template>
+          <template #info v-if="products?.length">
+            You have selected {{ products.length }} product(s)
           </template>
         </InputGroup>
 
