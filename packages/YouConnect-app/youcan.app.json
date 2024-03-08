@@ -1,9 +1,9 @@
 {
     "name": "you-connect",
     "id": "dapp_2dOxQl9e4D82BmBVcV8eGV06p8D",
-    "app_url": "https://b289-160-179-175-227.ngrok-free.app",
+    "app_url": "http://localhost:3000",
     "redirect_urls": [
-        "https://b289-160-179-175-227.ngrok-free.app/auth/callback"
+        "http://localhost:3000/auth/callback"
     ],
     "oauth": {
         "scopes": [
