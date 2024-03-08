@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 import requests
@@ -64,18 +66,22 @@ def create_profile():
     new_profile_id = str(uuid.uuid4())
 
     name = data.get('name')
+    slug = data.get('slug')
+    logo = data.get('logo')
+    store_id = data.get('store_id')
     description = data.get('description')
-    social_media_links = data.get('social_media_links')
-    custom_links = data.get('custom_links')
+    social_media_links = json.dumps(data.get('social_media_links'))
+    custom_links = json.dumps(data.get('custom_links'))
+    created_at = datetime.now()
+    updated_at = datetime.now()
 
-    insert_query = "INSERT INTO profiles (id, name, description, social_media_links, custom_links) VALUES (?, ?, ?, ?, ?)"
-    cursor.execute(insert_query, (new_profile_id, name, description, json.dumps(social_media_links), json.dumps(custom_links)))
+    insert_query = "INSERT INTO profiles (id, name,store_id,slug,logo, description, social_media_links, custom_links, created_at, updated_at) VALUES (?, ?,?, ?, ?, ?,?,?,?,?)"
+    cursor.execute(insert_query, (new_profile_id, name,store_id,slug,logo, description, social_media_links, custom_links,created_at, updated_at))
 
     connection.commit()
     connection.close()
 
     return jsonify({'message': 'Profile created successfully', 'profile_id': new_profile_id}), 201
-
 @app.route('/profiles/<store_id>', methods=['GET'])
 def get_profiles(store_id):
     connection = sqlite3.connect('data.sqlite')
@@ -140,6 +146,7 @@ def edit_profile(profile_id):
     else:
         connection.close()
         return jsonify({'error': 'Profile not found'}), 404
+
 @app.route('/profiles/<profile_id>', methods=['DELETE'])
 def delete_profile(profile_id):
     profile = Profile.query.get(profile_id)
