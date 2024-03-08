@@ -1,0 +1,157 @@
+from flask import Flask, jsonify, request
+from flask_sqlalchemy import SQLAlchemy
+import requests
+import sqlite3
+import uuid
+
+
+app = Flask(__name__)
+
+@app.route('/login', methods=['GET'])
+def login():
+    email = request.args.get('email')
+    password = request.args.get('password')
+
+    response = requests.post('https://api.youcan.shop/auth/login', json={'email': email, 'password': password})
+
+    if response.status_code == 200:
+        return 'Logged in successfully'
+    else:
+        return 'Invalid email or password', 401
+
+
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.sqlite'  # Replace with your database file path
+db = SQLAlchemy(app)
+
+
+class Profile(db.Model):
+    __tablename__ = 'profiles'
+    id = db.Column(db.Integer, primary_key=True)
+    store_id = db.Column(db.String)
+    logo = db.Column(db.String)
+    name = db.Column(db.String)
+    slug = db.Column(db.String)
+    description = db.Column(db.String)
+    social_media_links = db.Column(db.JSON)
+    custom_links = db.Column(db.JSON)
+    created_at = db.Column(db.DateTime)
+    updated_at = db.Column(db.DateTime)
+    deleted_at = db.Column(db.DateTime)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'store_id': self.store_id,
+            'logo': self.logo,
+            'name': self.name,
+            'slug': self.slug,
+            'description': self.description,
+            'social_media_links': self.social_media_links,
+            'custom_links': self.custom_links,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at,
+            'deleted_at': self.deleted_at
+        }
+
+
+@app.route('/profiles', methods=['POST'])
+def create_profile():
+    data = request.get_json()
+    connection = sqlite3.connect('data.sqlite')
+    cursor = connection.cursor()
+
+    new_profile_id = str(uuid.uuid4())
+
+    name = data.get('name')
+    description = data.get('description')
+    social_media_links = data.get('social_media_links')
+    custom_links = data.get('custom_links')
+
+    insert_query = "INSERT INTO profiles (id, name, description, social_media_links, custom_links) VALUES (?, ?, ?, ?, ?)"
+    cursor.execute(insert_query, (new_profile_id, name, description, json.dumps(social_media_links), json.dumps(custom_links)))
+
+    connection.commit()
+    connection.close()
+
+    return jsonify({'message': 'Profile created successfully', 'profile_id': new_profile_id}), 201
+
+@app.route('/profiles/<store_id>', methods=['GET'])
+def get_profile(store_id):
+    connection = sqlite3.connect('data.sqlite')
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT * FROM profiles WHERE store_id = ?", (store_id,))
+    result = cursor.fetchone()
+
+    if result:
+        profile = Profile(
+            id=result[0],
+            store_id=result[1],
+            logo=result[2],
+            name=result[3],
+            slug=result[4],
+            description=result[5],
+            social_media_links=result[6],
+            custom_links=result[7],
+            created_at=result[8],
+            updated_at=result[9],
+            deleted_at=result[10]
+        )
+        return jsonify(profile.to_dict())
+    else:
+        return jsonify({'error': 'Profile not found'}), 404
+
+
+import json
+
+
+@app.route('/profiles/<profile_id>', methods=['PUT'])
+def edit_profile(profile_id):
+    data = request.get_json()
+    connection = sqlite3.connect('data.sqlite')
+    cursor = connection.cursor()
+
+    # Check if the profile exists
+    cursor.execute("SELECT * FROM profiles WHERE id = ?", (profile_id,))
+    result = cursor.fetchone()
+
+    if result:
+        # Generate the SET clause for the update query
+        set_clause = ''
+        parameters = []
+
+        for key, value in data.items():
+            if key == 'social_media_links':
+                value = json.dumps(value)  # Serialize the dictionary to a JSON string
+            set_clause += f"{key} = ?, "
+            parameters.append(value)
+
+        # Remove the trailing comma and space from the set_clause
+        set_clause = set_clause[:-2]
+
+        # Build and execute the update query
+        update_query = f"UPDATE profiles SET {set_clause} WHERE id = ?"
+        parameters.append(profile_id)
+        cursor.execute(update_query, parameters)
+
+        connection.commit()
+        connection.close()
+
+        return jsonify({'message': 'Profile updated successfully'})
+    else:
+        connection.close()
+        return jsonify({'error': 'Profile not found'}), 404
+@app.route('/profiles/<profile_id>', methods=['DELETE'])
+def delete_profile(profile_id):
+    profile = Profile.query.get(profile_id)
+
+    if profile:
+        db.session.delete(profile)
+        db.session.commit()
+        return jsonify({'message': 'Profile deleted successfully'})
+    else:
+        return jsonify({'error': 'Profile not found'}), 404
+
+if __name__ == '__main__':
+    app.run()
