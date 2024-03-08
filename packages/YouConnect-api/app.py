@@ -77,32 +77,34 @@ def create_profile():
     return jsonify({'message': 'Profile created successfully', 'profile_id': new_profile_id}), 201
 
 @app.route('/profiles/<store_id>', methods=['GET'])
-def get_profile(store_id):
+def get_profiles(store_id):
     connection = sqlite3.connect('data.sqlite')
     cursor = connection.cursor()
 
     cursor.execute("SELECT * FROM profiles WHERE store_id = ?", (store_id,))
-    result = cursor.fetchone()
+    results = cursor.fetchall()
 
-    if result:
-        profile = Profile(
-            id=result[0],
-            store_id=result[1],
-            logo=result[2],
-            name=result[3],
-            slug=result[4],
-            description=result[5],
-            social_media_links=result[6],
-            custom_links=result[7],
-            created_at=result[8],
-            updated_at=result[9],
-            deleted_at=result[10]
-        )
-        return jsonify(profile.to_dict())
+    if results:
+        profiles = []
+        for result in results:
+            profile = Profile(
+                id=result[0],
+                store_id=result[1],
+                logo=result[2],
+                name=result[3],
+                slug=result[4],
+                description=result[5],
+                social_media_links=result[6],
+                custom_links=result[7],
+                created_at=result[8],
+                updated_at=result[9],
+                deleted_at=result[10]
+            )
+            profiles.append(profile.to_dict())
+
+        return jsonify(profiles)
     else:
-        return jsonify({'error': 'Profile not found'}), 404
-
-
+        return jsonify({'error': 'No profiles found for the specified store_id'}), 404
 import json
 
 
@@ -112,25 +114,21 @@ def edit_profile(profile_id):
     connection = sqlite3.connect('data.sqlite')
     cursor = connection.cursor()
 
-    # Check if the profile exists
     cursor.execute("SELECT * FROM profiles WHERE id = ?", (profile_id,))
     result = cursor.fetchone()
 
     if result:
-        # Generate the SET clause for the update query
         set_clause = ''
         parameters = []
 
         for key, value in data.items():
             if key == 'social_media_links':
-                value = json.dumps(value)  # Serialize the dictionary to a JSON string
+                value = json.dumps(value)
             set_clause += f"{key} = ?, "
             parameters.append(value)
 
-        # Remove the trailing comma and space from the set_clause
         set_clause = set_clause[:-2]
 
-        # Build and execute the update query
         update_query = f"UPDATE profiles SET {set_clause} WHERE id = ?"
         parameters.append(profile_id)
         cursor.execute(update_query, parameters)
