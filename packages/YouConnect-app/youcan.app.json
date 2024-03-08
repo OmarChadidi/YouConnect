@@ -1,0 +1,14 @@
+{
+    "name": "you-connect",
+    "id": "dapp_2dOxQl9e4D82BmBVcV8eGV06p8D",
+    "app_url": "https://b289-160-179-175-227.ngrok-free.app",
+    "redirect_urls": [
+        "https://b289-160-179-175-227.ngrok-free.app/auth/callback"
+    ],
+    "oauth": {
+        "scopes": [
+            "*"
+        ],
+        "client_id": "86"
+    }
+}
